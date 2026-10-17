@@ -26,8 +26,11 @@ local function GetMissileClass(ID)
 end
 local InputActions   = ACF.GetInputActions("acf_missile")
 local hook           = hook
-local Inputs         = { "Detonate (Force the missile to explode.)" }
+local Inputs         = { "Detonate (Force the missile to explode.)", "Depth (Below the water.)"}
 local Outputs        = { "Entity (The missile itself.) [ENTITY]" }
+
+
+
 
 local function ApplyBodySubgroup(Missile, Group, Source, Phase)
 	local Target = Source.DataSource(Missile)
@@ -216,8 +219,12 @@ local function CalcFlight(Missile)
 		end
 		-- Calculating the AoA (and subsequent direction) that produces the desired acceleration
 		local TargetAoA = math.deg(math.asin(math.min(Nav:Length() / LiftMultiplier, 1)))
+
+		
+
 		local AoAAxis   = VelNorm:Cross(Nav):GetNormalized()
 		local TargetAng = VelNorm:Angle()
+
 		TargetAng:RotateAroundAxis(AoAAxis, TargetAoA)
 		local TargetDir = TargetAng:Forward()
 		-- Turning the missile to the target direction
@@ -253,6 +260,11 @@ local function CalcFlight(Missile)
 	end
 
 	local Thrust    = Dir * FuelMod * Missile.Thrust / Missile.Mass
+		if Missile.ShortName == "TPD" then
+			if Missile:WaterLevel() <= 1 then
+				Thrust = Dir * FuelMod * 0.01 / Missile.Mass
+			end
+		end
 	local Up        = Dir:Cross(LastVel):Cross(Dir):GetNormalized()
 	local DotSimple = Up.x * VelNorm.x + Up.y * VelNorm.y + Up.z * VelNorm.z
 	local Lift      = -Up * DotSimple * LiftMultiplier
